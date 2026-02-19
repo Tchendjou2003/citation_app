@@ -1,19 +1,18 @@
-import 'package:flutter/material.dart';
-import 'modele.dart';
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
+import 'modele.dart';
 
 class QuotePage extends StatefulWidget {
   const QuotePage({super.key});
 
   @override
-  _QuotePageState createState() => _QuotePageState();
+  State<QuotePage> createState() => _QuotePageState();
 }
-
 
 class _QuotePageState extends State<QuotePage>
     with SingleTickerProviderStateMixin {
-  // Liste typée des citations
   final List<Quote> _quotes = [
     const Quote(
       text:
@@ -56,159 +55,171 @@ class _QuotePageState extends State<QuotePage>
     ),
   ];
 
-  
-  late Quote _currentQuote = _quotes[0];
-
-  
   final Random _random = Random();
 
-  // Contrôleur d'animation pour gérer l'effet d'apparition/disparition.
+  late Quote _currentQuote = _quotes[0];
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
-
 
   @override
   void initState() {
     super.initState();
-    
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 450),
     );
 
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
     );
-   
+
     _getNewQuote();
   }
 
-  // Méthode pour obtenir une nouvelle citation aléatoire.
-  void _getNewQuote() async {
-    
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _getNewQuote() async {
     var newQuote = _quotes[_random.nextInt(_quotes.length)];
 
-   
     while (newQuote.text == _currentQuote.text && _quotes.length > 1) {
       newQuote = _quotes[_random.nextInt(_quotes.length)];
     }
 
-    
-    _controller.reverse();
-    
-    await Future.delayed(const Duration(milliseconds: 250));
+    await _controller.reverse();
+
+    if (!mounted) {
+      return;
+    }
 
     setState(() {
       _currentQuote = newQuote;
     });
 
-    _controller.forward();
+    await _controller.forward();
   }
 
- 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-   
-      backgroundColor: Colors.teal.shade50,
       appBar: AppBar(
-        elevation: 0, 
-        centerTitle: true, 
-        title: const Text(
-          'Citations Inspirantes',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
+        centerTitle: true,
+        title: const Text('Citations Inspirantes'),
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.teal.shade800, 
+        foregroundColor: const Color(0xFF134E4A),
       ),
-    
       body: Container(
-  
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.teal.shade100, Colors.blue.shade100],
+            colors: [Color(0xFFE6FFFA), Color(0xFFE0F2FE), Color(0xFFF8FAFC)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0), 
-          child: Center(
-            
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-             
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                 
-                  Card(
-                    elevation: 10,
-                    shadowColor: Colors.teal.shade200,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(28.0),
-                      child: Column(
-                        children: [
-                     
-                          Icon(
-                            Icons.format_quote,
-                            color: Colors.teal.shade400,
-                            size: 48,
-                          ),
-                          const SizedBox(height: 20), // espace vertical
-                          // Texte de la citation
-                          Text(
-                            _currentQuote.text,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontStyle: FontStyle.italic,
-                              height: 1.5,
-                              color: Colors.black87,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF14B8A6), Color(0xFF0EA5E9)],
+                        ),
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 28,
+                          vertical: 32,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.92),
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x220F766E),
+                              blurRadius: 28,
+                              offset: Offset(0, 12),
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 25),
-                          // Auteur de la citation
-                          Text(
-                            '- ${_currentQuote.author}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.teal.shade700,
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.auto_awesome,
+                              color: Color(0xFF0F766E),
+                              size: 42,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 18),
+                            Text(
+                              _currentQuote.text,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontStyle: FontStyle.italic,
+                                height: 1.45,
+                              ),
+                            ),
+                            const SizedBox(height: 26),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(999),
+                                color: const Color(0xFFF0FDFA),
+                                border: Border.all(
+                                  color: const Color(0xFF5EEAD4),
+                                ),
+                              ),
+                              child: Text(
+                                _currentQuote.author,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: const Color(0xFF115E59),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                  // Bouton pour générer une nouvelle citation
-                  ElevatedButton.icon(
-                    onPressed: _getNewQuote, // appelle la méthode ci-dessus
-                    icon: const Icon(Icons.autorenew),
-                    label: const Text('Nouvelle citation'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal.shade400,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 16,
+                    const SizedBox(height: 30),
+                    FilledButton.icon(
+                      onPressed: _getNewQuote,
+                      icon: const Icon(Icons.casino_outlined),
+                      label: const Text('Nouvelle citation'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 16,
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 6,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
